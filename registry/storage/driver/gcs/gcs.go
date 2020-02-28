@@ -31,6 +31,8 @@ import (
 	"strings"
 	"time"
 
+	"cloud.google.com/go"
+	"cloud.google.com/go/storage"
 	storagedriver "github.com/docker/distribution/registry/storage/driver"
 	"github.com/docker/distribution/registry/storage/driver/base"
 	"github.com/docker/distribution/registry/storage/driver/factory"
@@ -39,8 +41,6 @@ import (
 	"golang.org/x/oauth2/google"
 	"golang.org/x/oauth2/jwt"
 	"google.golang.org/api/googleapi"
-	"google.golang.org/cloud"
-	"google.golang.org/cloud/storage"
 )
 
 const (

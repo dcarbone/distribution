@@ -12,8 +12,6 @@ import (
 	"syscall"
 	"time"
 
-	"rsc.io/letsencrypt"
-
 	"github.com/Shopify/logrus-bugsnag"
 	logstash "github.com/bshuster-repo/logrus-logstash-hook"
 	"github.com/bugsnag/bugsnag-go"
@@ -29,6 +27,7 @@ import (
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/yvasiyarov/gorelic"
+	"golang.org/x/crypto/acme/autocert"
 )
 
 // this channel gets notified when process receives signal. It is global to ease unit testing
@@ -154,17 +153,14 @@ func (registry *Registry) ListenAndServe() error {
 			if config.HTTP.TLS.Certificate != "" {
 				return fmt.Errorf("cannot specify both certificate and Let's Encrypt")
 			}
-			var m letsencrypt.Manager
-			if err := m.CacheFile(config.HTTP.TLS.LetsEncrypt.CacheFile); err != nil {
-				return err
-			}
-			if !m.Registered() {
-				if err := m.Register(config.HTTP.TLS.LetsEncrypt.Email, nil); err != nil {
-					return err
-				}
-			}
+			var m autocert.Manager
+
+			m.Cache = autocert.DirCache(config.HTTP.TLS.LetsEncrypt.CacheFile)
+			m.Prompt = autocert.AcceptTOS
+			m.Email = config.HTTP.TLS.LetsEncrypt.Email
+
 			if len(config.HTTP.TLS.LetsEncrypt.Hosts) > 0 {
-				m.SetHosts(config.HTTP.TLS.LetsEncrypt.Hosts)
+				m.HostPolicy = autocert.HostWhitelist(config.HTTP.TLS.LetsEncrypt.Hosts...)
 			}
 			tlsConf.GetCertificate = m.GetCertificate
 		} else {
